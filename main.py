@@ -1,6 +1,8 @@
 import os
 import csv
 import sys
+from errors import WrongCategoryError
+from errors import UnexpectedValueTypeError
 
 
 def is_correct_type(item, expected_type):
@@ -42,22 +44,25 @@ def is_correct_type(item, expected_type):
                 
 
 def find_type_errors(col_vs_type, reader_obj, file_path):
-    """Function for find value errors in a given csv file
+    """Function for find value errors in a given csv file, and return them in a list.
 
     Parameters:
         -col_vs_type: tuple with the name-type pairs.
         -reader_obj: csv reader object converted into tuple.
         -file_path: path of the given file.
     """
+    errors = []
 
     for row in reader_obj:
         for col, type_ in col_vs_type:
-            #try:
-            if not is_correct_type(row[col], type_):
-            
-                print('no')
-            #except Exception as e:
-                #print(e)
+            try:
+                if not is_correct_type(row[col], type_):
+                    raise UnexpectedValueTypeError(os.path.basename(file_path), col, reader_obj.index(row), type_, row[col])
+                
+            except UnexpectedValueTypeError as e:
+                errors.append(e)
+    
+    return errors
 
 
 def main(file_paths):
@@ -68,8 +73,14 @@ def main(file_paths):
     Parameters:
         -file_paths: List of .csv file paths
     """
+    print("""Please choice tha value you expect to find on each column.
+            S = string
+            I = int
+            F = float
+            N = numeric (either float or int)
+            B = boolean""")
 
-    errors = []
+    total_errors = []
     for p in file_paths:
         row_types = []
         with open(p, 'r') as f:
@@ -94,9 +105,18 @@ def main(file_paths):
                 elif column_value_type == 'B':
                     row_types.append(bool)
 
-            name_type_pairs = tuple(zip(column_names, row_types))
-            find_type_errors(name_type_pairs, dict_reader, p)
+                else:
+                    raise WrongCategoryError(column_value_type)
 
+            name_type_pairs = tuple(zip(column_names, row_types))
+            total_errors += find_type_errors(name_type_pairs, dict_reader, p)
+    
+    if not total_errors:
+        print('There are no errors, it seems your files are perfectly fine :)')
+    else:
+        print(f'There are {len(total_errors)} errors!')
+        for e in total_errors:
+            print(e)
 
 
 if __name__ == '__main__':
