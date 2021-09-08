@@ -13,20 +13,20 @@ def is_correct_type(item, expected_type):
         -item: the piece of data we are going to check.
         -expected_type: the expected data type for item.
     """
-    if item != None:
+    if item != None: #if we are not in front of a missing value
         if expected_type in {int, float, (int, float)}:
             try:
-                if (float(item)*10%10) == 0: 
+                if (float(item)*10%10) == 0: #if the number is not a float 
                     
                     if expected_type in {int, (int, float)}:
                         return True
                     elif expected_type == float:
                         return False
                 
-                elif expected_type in {float, (int, float)}:
+                elif expected_type in {float, (int, float)}: 
                     return True
 
-            except ValueError: #This means that the value was not an integer or float
+            except ValueError: #This means that the value was not an integer neither float
                 return False
 
         elif expected_type == bool and item.strip().upper() in {'TRUE', 'FALSE'}:
@@ -37,7 +37,7 @@ def is_correct_type(item, expected_type):
                 float(item)
                 return False
             
-            except ValueError: #This means that we could not convert the item to float, wich means is not a numeric value
+            except ValueError: #This means that we could not convert the item to float, wich means is not a numeric value.
                 return True
     else:
         return False
@@ -84,7 +84,7 @@ def main(file_paths):
     for p in file_paths:
         row_types = []
         with open(p, 'r') as f:
-            dict_reader = tuple(csv.DictReader(f))
+            dict_reader = tuple(csv.DictReader(f, skipinitialspace=True))
             column_names = dict_reader[0].keys()
         
             for column in column_names:
@@ -120,18 +120,29 @@ def main(file_paths):
 
 
 if __name__ == '__main__':
-    path = sys.argv[1]
-    
-    if not os.path.exists(path):
-        raise Exception('Unexistent file or dir')
-    
-    elif os.path.isdir(path):
-        list_of_file_paths = []
-        for p in os.listdir(path):
-            if os.path.basename(p).endswith('.csv'):
-                list_of_file_paths.append(os.path.join(path, p))
+    try:
+        path = sys.argv[1]
+        if not os.path.exists(path):
+            raise FileNotFoundError('Unexistent file or dir')
+        
+        elif os.path.isdir(path):
+            list_of_file_paths = []
+            for p in os.listdir(path):
+                if os.path.basename(p).endswith('.csv'):
+                    list_of_file_paths.append(os.path.join(path, p))
 
-        main(list_of_file_paths)
+            if list_of_file_paths:
+                main(list_of_file_paths)
+            
+            else:
+                raise FileNotFoundError('There are no .csv files')
+        
+        else:
+            main((path,))
     
-    else:
-        main((path,))
+    except FileNotFoundError as e:
+        print(e)
+
+    except IndexError: #Above code will throw this exception if the user does not specify a path to look for
+        print('Please specify a path to look for. Write "." as an input if you want to use your cwd as an input.')
+
