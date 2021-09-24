@@ -135,10 +135,13 @@ if __name__ == '__main__':
                 main(list_of_file_paths)
             
             else:
-                raise FileNotFoundError('There are no .csv files')
+                raise FileNotFoundError('There are no .csv files.')
         
-        else:
+        elif os.path.basename(path).endswith('.csv'):
             main((path,))
+
+        else:
+            raise FileNotFoundError('That file is not a .csv file.')
     
     except FileNotFoundError as e:
         print(e)
